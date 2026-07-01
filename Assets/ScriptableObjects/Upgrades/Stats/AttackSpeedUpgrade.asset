@@ -16,4 +16,4 @@ MonoBehaviour:
   description: aumento de velocidad de ataque
   stat: 1
   mode: 1
-  value: 10
+  value: 0.5

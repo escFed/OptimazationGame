@@ -1,5 +1,6 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class EnemySystem : IUpdateable
 {
@@ -7,6 +8,7 @@ public class EnemySystem : IUpdateable
     private ObjectPool<Enemy> enemyPool;
     private List<Enemy> activeEnemies = new();
     private int nextEnemyId = 1;
+    private int totalEnemiesKilled;
 
     public EnemySystem(PoolService poolService)
     {
@@ -15,7 +17,9 @@ public class EnemySystem : IUpdateable
     }
 
     public int CountActive => activeEnemies.Count;
+    public int TotalEnemiesKilled => totalEnemiesKilled;
     public IReadOnlyList<Enemy> ActiveEnemies => activeEnemies;
+    public event Action<int> EnemyKilled;
 
     public Enemy Spawn(EnemyData data, Vector3 position)
     {
@@ -47,5 +51,8 @@ public class EnemySystem : IUpdateable
         poolService.Return(enemy.Data.Prefab, enemy.Instance);
         enemyPool.Return(enemy);
         activeEnemies.RemoveAt(index);
+
+        totalEnemiesKilled++;
+        EnemyKilled?.Invoke(totalEnemiesKilled);
     }
 }

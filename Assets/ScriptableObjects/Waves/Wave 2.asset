@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Wave 2
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   waveNumber: 1
-  duration: 45
+  duration: 5
   enemyTypes:
   - {fileID: 11400000, guid: eb26a235fa187414cb2f2a5319de2635, type: 2}
   spawnInterval: 2
   spawnRadius: 12
-  maxEnemies: 20
+  maxEnemies: 10
   isFinalWave: 0

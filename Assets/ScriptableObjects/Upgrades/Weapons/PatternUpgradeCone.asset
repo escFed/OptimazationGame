@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25767106d13fccd488532bc62c4bd783, type: 3}
   m_Name: PatternUpgradeCone
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPatternUpgradeData
-  title: 
-  description: 
+  title: disparo en cono
+  description: disparon en cono
   pattern: {fileID: 11400000, guid: 364267dbd7f374748972dea2bc9e377b, type: 2}

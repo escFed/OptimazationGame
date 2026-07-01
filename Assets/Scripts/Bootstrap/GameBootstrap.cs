@@ -10,9 +10,8 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private WaveData[] waves;
     [SerializeField] private UpgradeData[] availableUpgrades;
     [SerializeField] private int upgradeChoiceCount = 3;
-    [SerializeField] private bool autoSelectFirstUpgrade;
     [SerializeField] private CameraFollowData cameraFollowData;
-    [SerializeField] private UpgradeSelectionUI upgradeSelectionUI;
+    [SerializeField] private GameUI gameUI;
 
     private ServiceLocator services;
 
@@ -42,32 +41,31 @@ public class GameBootstrap : MonoBehaviour
         var aiSystem = new AISystem(player, enemySystem);
         var spawnSystem = new SpawnSystem(enemySystem, player);
         var waveSystem = new WaveSystem(waves, spawnSystem, enemySystem);
+        var gameStateSystem = new GameStateSystem(player, waveSystem);
+        var enemyAttackSystem = new EnemyAttackSystem(player, enemySystem, combatSystem, gameStateSystem);
         var upgradeContext = new UpgradeContext(player, weaponSystem);
         var upgradeSystem = new UpgradeSystem(availableUpgrades, upgradeChoiceCount, upgradeContext, waveSystem);
 
-        upgradeSelectionUI.Initialize(upgradeSystem);
+        gameUI.Initialize(gameStateSystem, upgradeSystem, player, waveSystem, enemySystem);
 
         services.Register(enemySystem);
         services.Register(weaponSystem);
         services.Register(waveSystem);
         services.Register(upgradeSystem);
-        services.Register(upgradeSelectionUI);
-
-        if (autoSelectFirstUpgrade)
-        {
-            upgradeSystem.UpgradeSelectionStarted += _ => upgradeSystem.SelectUpgrade(0);
-        }
+        services.Register(gameStateSystem);
+        services.Register(gameUI);
 
         updateManager.Register(movementSystem);
         updateManager.Register(playerAimSystem);
         updateManager.Register(waveSystem);
         updateManager.Register(spawnSystem);
         updateManager.Register(aiSystem);
+        updateManager.Register(enemyAttackSystem);
         updateManager.Register(weaponSystem);
         updateManager.Register(projectileSystem);
         updateManager.Register(enemySystem);
         updateManager.RegisterLateUpdate(cameraFollowSystem);
 
-        waveSystem.Start();
+        gameStateSystem.ShowMainMenu();
     }
 }

@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25767106d13fccd488532bc62c4bd783, type: 3}
   m_Name: PatternUpgradeCross
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPatternUpgradeData
-  title: 
-  description: 
-  pattern: {fileID: 11400000, guid: 364267dbd7f374748972dea2bc9e377b, type: 2}
+  title: disparo en cruz
+  description: disparas en cruz
+  pattern: {fileID: 11400000, guid: 7f593a244d2f63d47b83fbbecad4e8ac, type: 2}

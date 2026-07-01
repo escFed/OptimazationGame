@@ -5,6 +5,7 @@ public class WaveSystem : IUpdateable
     private WaveData[] waves;
     private SpawnSystem spawnSystem;
     private EnemySystem enemySystem;
+
     private int currentWaveIndex;
     private float timeRemaining;
     private bool isRunning;
@@ -19,10 +20,12 @@ public class WaveSystem : IUpdateable
 
     public event Action<WaveData> WaveStarted;
     public event Action<WaveData> WaveCompleted;
+    public event Action<float, float> WaveTimeChanged;
     public event Action GameCompleted;
 
     public WaveData CurrentWave { get; private set; }
     public bool IsGameCompleted { get; private set; }
+    public bool IsRunning => isRunning;
     public float TimeRemaining => timeRemaining;
 
     public void Start()
@@ -41,7 +44,8 @@ public class WaveSystem : IUpdateable
 
         if (timeRemaining > 0f)
         {
-            timeRemaining -= deltaTime;
+            timeRemaining = Math.Max(0f, timeRemaining - deltaTime);
+            WaveTimeChanged?.Invoke(timeRemaining, CurrentWave.Duration);
 
             if (timeRemaining <= 0f)
             {
@@ -79,7 +83,9 @@ public class WaveSystem : IUpdateable
 
         spawnSystem.Configure(CurrentWave);
         spawnSystem.StartSpawning();
+
         WaveStarted?.Invoke(CurrentWave);
+        WaveTimeChanged?.Invoke(timeRemaining, CurrentWave.Duration);
     }
 
     private void CompleteCurrentWave()

@@ -3,12 +3,15 @@ using UnityEngine;
 public class Enemy : IEntity, IDamageable, IPoolable
 {
     private GameObject instance;
-    private float currentHealth;
+    private float attackCooldownTimer;
 
     public int Id { get; private set; }
     public EnemyData Data { get; private set; }
-    public bool IsDead => currentHealth <= 0f;
+    public Health Health { get; private set; }
+
+    public bool IsDead => Health == null || Health.IsDead;
     public bool IsActive => instance != null && instance.activeInHierarchy;
+    public bool CanAttack => attackCooldownTimer <= 0f;
     public GameObject Instance => instance;
 
     public Vector3 Position
@@ -22,13 +25,23 @@ public class Enemy : IEntity, IDamageable, IPoolable
         Id = id;
         Data = data;
         this.instance = instance;
-        currentHealth = data.Health;
+
+        if (Health == null)
+        {
+            Health = new Health(data.Health);
+        }
+        else
+        {
+            Health.Reset(data.Health);
+        }
+
+        attackCooldownTimer = 0f;
         Position = position;
     }
 
     public void TakeDamage(float amount, IEntity source)
     {
-        currentHealth = Mathf.Max(0f, currentHealth - amount);
+        Health.TakeDamage(amount);
     }
 
     public void FaceDirection(Vector3 direction)
@@ -37,6 +50,19 @@ public class Enemy : IEntity, IDamageable, IPoolable
         {
             instance.transform.forward = direction.normalized;
         }
+    }
+
+    public void TickAttackCooldown(float deltaTime)
+    {
+        if (attackCooldownTimer > 0f)
+        {
+            attackCooldownTimer -= deltaTime;
+        }
+    }
+
+    public void ResetAttackCooldown()
+    {
+        attackCooldownTimer = Data.AttackCooldown;
     }
 
     public void OnSpawn()
@@ -48,6 +74,6 @@ public class Enemy : IEntity, IDamageable, IPoolable
         Id = 0;
         Data = null;
         instance = null;
-        currentHealth = 0f;
+        attackCooldownTimer = 0f;
     }
 }

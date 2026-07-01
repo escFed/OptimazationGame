@@ -20,10 +20,17 @@ public class WeaponSystem : IUpdateable
 
     public void Tick(float deltaTime)
     {
-        if (!player.IsActive) return;
+        if (!player.IsActive || deltaTime <= 0f)
+        {
+            return;
+        }
 
         cooldownTimer -= deltaTime;
-        if (cooldownTimer > 0f) return;
+
+        if (cooldownTimer > 0f)
+        {
+            return;
+        }
 
         Shoot();
 
