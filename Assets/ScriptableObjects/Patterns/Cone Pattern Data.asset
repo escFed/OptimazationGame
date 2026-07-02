@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12600ae8625016c4093803885d37d601, type: 3}
   m_Name: Cone Pattern Data
   m_EditorClassIdentifier: Assembly-CSharp::ConePatternData
+  baseAttackInterval: 0.3
   projectileCount: 5
   angle: 60

@@ -6,17 +6,22 @@ public class WeaponSystem : IUpdateable
     private Player player;
     private ProjectileSystem projectileSystem;
     private ProjectileData projectileData;
-    private PatternData patternData;
-    private List<Vector3> directions = new (8);
+
+    private List<ActivePattern> activePatterns = new();
+    private List<Vector3> directions = new();
+
     private float cooldownTimer;
 
-    public WeaponSystem(Player player, ProjectileSystem projectileSystem, ProjectileData projectileData, PatternData patternData)
+    public WeaponSystem(Player player, ProjectileSystem projectileSystem, ProjectileData projectileData, PatternData initialPattern)
     {
         this.player = player;
         this.projectileSystem = projectileSystem;
         this.projectileData = projectileData;
-        this.patternData = patternData;
+
+        AddPattern(initialPattern);
     }
+
+    public IReadOnlyList<ActivePattern> ActivePatterns => activePatterns;
 
     public void Tick(float deltaTime)
     {
@@ -25,36 +30,49 @@ public class WeaponSystem : IUpdateable
             return;
         }
 
-        cooldownTimer -= deltaTime;
+        for (var i = 0; i < activePatterns.Count; i++)
+        {
+            var activePattern = activePatterns[i];
 
-        if (cooldownTimer > 0f)
+            activePattern.Tick(deltaTime);
+
+            if (!activePattern.CanFire)
+            {
+                continue;
+            }
+
+            Shoot(activePattern.Pattern);
+            activePattern.ResetCooldown(player.Stats.AttackSpeed);
+        }
+    }
+
+    public void AddPattern(PatternData newPattern)
+    {
+        if (newPattern == null || HasPattern(newPattern))
         {
             return;
         }
 
-        Shoot();
-
-        var shotsPerSecond = Mathf.Max(0.01f, player.Stats.AttackSpeed);
-        cooldownTimer = 1f / shotsPerSecond;
+        activePatterns.Add(new ActivePattern(newPattern));
     }
 
-    public void SetPattern(PatternData newPattern)
+    private bool HasPattern(PatternData pattern)
     {
-        if (newPattern != null)
+        for (var i = 0; i < activePatterns.Count; i++)
         {
-            patternData = newPattern;
+            if (activePatterns[i].Pattern == pattern)
+            {
+                return true;
+            }
         }
+
+        return false;
     }
 
-    private void Shoot()
+    private void Shoot(PatternData pattern)
     {
-        if (patternData == null)
-        {
-            return;
-        }
-
         directions.Clear();
-        patternData.GetDirections(player.Transform, directions);
+        pattern.GetDirections(player.Transform, directions);
 
         for (var i = 0; i < directions.Count; i++)
         {
@@ -65,9 +83,12 @@ public class WeaponSystem : IUpdateable
                 continue;
             }
 
-            var spawnPosition = player.Position + direction.normalized * projectileData.SpawnOffset;
+            var normalizedDirection = direction.normalized;
+            var spawnPosition = player.Position + normalizedDirection * projectileData.SpawnOffset;
             var damage = player.Stats.Damage + projectileData.Damage;
-            projectileSystem.Spawn(projectileData, spawnPosition, direction, player.Id, damage);
+
+            projectileSystem.Spawn(projectileData, spawnPosition, normalizedDirection, player.Id, damage);
+
         }
     }
 }

@@ -12,4 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d4f0cd3f25b1f49b78a4f190a0b70c, type: 3}
   m_Name: Radial Pattern Data
   m_EditorClassIdentifier: Assembly-CSharp::RadialPatternData
+  baseAttackInterval: 2
   projectileCount: 8

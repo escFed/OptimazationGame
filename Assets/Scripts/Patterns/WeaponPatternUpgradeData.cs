@@ -9,6 +9,6 @@ public class WeaponPatternUpgradeData : UpgradeData
 
     public override void Apply(UpgradeContext context)
     {
-        context.WeaponSystem.SetPattern(pattern);
+        context.WeaponSystem.AddPattern(pattern);
     }
 }

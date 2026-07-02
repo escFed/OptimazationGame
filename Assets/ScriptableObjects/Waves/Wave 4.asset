@@ -19,4 +19,4 @@ MonoBehaviour:
   spawnInterval: 2
   spawnRadius: 12
   maxEnemies: 10
-  isFinalWave: 0
+  isFinalWave: 1

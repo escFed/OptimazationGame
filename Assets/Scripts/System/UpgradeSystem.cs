@@ -1,23 +1,36 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class UpgradeSystem
 {
-    private UpgradeData[] availableUpgrades;
+    private List<UpgradeData> availableUpgrades = new();
+    private List<UpgradeData> selectedUpgrades = new();
+
     private int choiceCount;
     private UpgradeContext context;
     private WaveSystem waveSystem;
+
     private List<UpgradeData> currentChoices = new();
     private bool isSelectionOpen;
 
     public UpgradeSystem(UpgradeData[] availableUpgrades, int choiceCount, UpgradeContext context, WaveSystem waveSystem)
     {
-        this.availableUpgrades = availableUpgrades;
+        if (availableUpgrades != null)
+        {
+            for (var i = 0; i < availableUpgrades.Length; i++)
+            {
+                if (availableUpgrades[i] != null && !this.availableUpgrades.Contains(availableUpgrades[i]))
+                {
+                    this.availableUpgrades.Add(availableUpgrades[i]);
+                }
+            }
+        }
+
         this.choiceCount = Mathf.Max(1, choiceCount);
         this.context = context;
         this.waveSystem = waveSystem;
+
         this.waveSystem.WaveCompleted += BeginSelection;
     }
 
@@ -25,6 +38,7 @@ public class UpgradeSystem
     public event Action<UpgradeData> UpgradeApplied;
 
     public IReadOnlyList<UpgradeData> CurrentChoices => currentChoices;
+    public IReadOnlyList<UpgradeData> SelectedUpgrades => selectedUpgrades;
     public bool IsSelectionOpen => isSelectionOpen;
 
     public void SelectUpgrade(int choiceIndex)
@@ -37,8 +51,16 @@ public class UpgradeSystem
         var upgrade = currentChoices[choiceIndex];
 
         upgrade.Apply(context);
+        selectedUpgrades.Add(upgrade);
+
+        if (!upgrade.CanRepeat)
+        {
+            availableUpgrades.Remove(upgrade);
+        }
+
         isSelectionOpen = false;
         currentChoices.Clear();
+
         UpgradeApplied?.Invoke(upgrade);
         waveSystem.ContinueToNextWave();
     }
@@ -66,24 +88,21 @@ public class UpgradeSystem
     {
         currentChoices.Clear();
 
-        if (availableUpgrades == null || availableUpgrades.Length == 0)
+        if (availableUpgrades.Count == 0)
         {
             return;
         }
 
-        var attempts = 0;
-        var maxAttempts = availableUpgrades.Length * 4;
+        var tempPool = new List<UpgradeData>(availableUpgrades);
+        var amount = Mathf.Min(choiceCount, tempPool.Count);
 
-        while (currentChoices.Count < choiceCount && attempts < maxAttempts)
+        for (var i = 0; i < amount; i++)
         {
-            attempts++;
+            var randomIndex = UnityEngine.Random.Range(0, tempPool.Count);
+            var upgrade = tempPool[randomIndex];
 
-            var upgrade = availableUpgrades[UnityEngine.Random.Range(0, availableUpgrades.Length)];
-
-            if (upgrade != null && !currentChoices.Contains(upgrade))
-            {
-                currentChoices.Add(upgrade);
-            }
+            currentChoices.Add(upgrade);
+            tempPool.RemoveAt(randomIndex);
         }
     }
 }

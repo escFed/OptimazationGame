@@ -3,7 +3,8 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] private CustomUpdateManager updateManager;
-    [SerializeField] private TransformView transformView;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private Terrain terrain;
     [SerializeField] private PlayerBaseStats playerStats;
     [SerializeField] private ProjectileData projectileData;
     [SerializeField] private PatternData weaponPattern;
@@ -14,13 +15,14 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private GameUI gameUI;
 
     private ServiceLocator services;
+    private PlayerInput inputService;
 
     private void Awake()
     {
         services = new ServiceLocator();
+        inputService = new PlayerInput();
 
         var timeService = new TimeService();
-        var inputService = new PlayerInput();
         var poolService = new PoolService();
         var combatSystem = new CombatSystem();
 
@@ -30,6 +32,8 @@ public class GameBootstrap : MonoBehaviour
         services.Register(poolService);
         services.Register(combatSystem);
 
+        var playerObject = Instantiate(playerPrefab, GetTerrainCenter(), Quaternion.identity);
+        var transformView = playerObject.GetComponent<TransformView>();
         var player = new Player(1, transformView, playerStats);
         var mainCamera = Camera.main;
         var enemySystem = new EnemySystem(poolService);
@@ -67,5 +71,27 @@ public class GameBootstrap : MonoBehaviour
         updateManager.RegisterLateUpdate(cameraFollowSystem);
 
         gameStateSystem.ShowMainMenu();
+    }
+
+    private void OnDestroy()
+    {
+        inputService?.Dispose();
+    }
+
+    private Vector3 GetTerrainCenter()
+    {
+        if (terrain == null)
+        {
+            return Vector3.zero;
+        }
+
+        var terrainTransform = terrain.transform;
+        var terrainData = terrain.terrainData;
+        var size = terrainData.size;
+
+        var center = terrainTransform.position + new Vector3(size.x * 0.5f, 0f, size.z * 0.5f);
+        center.y = terrain.SampleHeight(center) + terrainTransform.position.y;
+
+        return center;
     }
 }

@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8b42c325f78255448fb34e081a617a2, type: 3}
   m_Name: Cross Pattern Data
   m_EditorClassIdentifier: Assembly-CSharp::CrossPatternData
+  baseAttackInterval: 0.5

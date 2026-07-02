@@ -32,6 +32,8 @@ public class GameUI : MonoBehaviour
     [Header("End Screens")]
     [SerializeField] private Button victoryRestartButton;
     [SerializeField] private Button defeatRestartButton;
+    [SerializeField] private Button victoryMainMenuButton;
+    [SerializeField] private Button defeatMainMenuButton;
 
     private GameStateSystem gameStateSystem;
     private UpgradeSystem upgradeSystem;
@@ -71,6 +73,12 @@ public class GameUI : MonoBehaviour
 
         defeatRestartButton.onClick.RemoveAllListeners();
         defeatRestartButton.onClick.AddListener(RestartScene);
+
+        victoryMainMenuButton.onClick.RemoveAllListeners();
+        victoryMainMenuButton.onClick.AddListener(ReturnToMainMenu);
+
+        defeatMainMenuButton.onClick.RemoveAllListeners();
+        defeatMainMenuButton.onClick.AddListener(ReturnToMainMenu);
 
         appliedUpgradeNames.Clear();
 
@@ -204,6 +212,12 @@ public class GameUI : MonoBehaviour
     }
 
     private void RestartScene()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private void ReturnToMainMenu()
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

@@ -9,6 +9,6 @@ public class WeaponUpgradeData : ScriptableObject
 
     public void Apply(UpgradeContext context)
     {
-        context.WeaponSystem.SetPattern(pattern);
+        context.WeaponSystem.AddPattern(pattern);
     }
 }

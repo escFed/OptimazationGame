@@ -16,4 +16,4 @@ MonoBehaviour:
   maxHealth: 100
   armor: 0
   damage: 10
-  attackSpeed: 3
+  attackSpeed: 0.5

@@ -12,5 +12,12 @@ public class PlayerInput
     }
 
     public Vector2 MoveInput => inputActions.Player.Move.ReadValue<Vector2>();
+
     public Vector2 PointerScreenPosition => Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+
+    public void Dispose()
+    {
+        inputActions.Player.Disable();
+        inputActions.Dispose();
+    }
 }
