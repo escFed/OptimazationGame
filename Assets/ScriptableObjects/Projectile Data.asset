@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
   prefab: {fileID: 6431865449964847538, guid: e3d52a67638c4d842b15ae54de82b29b, type: 3}
   speed: 12
-  damage: 10
+  damage: 100
   lifetime: 2
   spawnOffset: 0.8
+  collisionRadius: 0.25

@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
 
-public sealed class GameStateSystem
+public class GameStateSystem
 {
-    private readonly Player player;
-    private readonly WaveSystem waveSystem;
+    private Player player;
+    private WaveSystem waveSystem;
 
     public GameStateSystem(Player player, WaveSystem waveSystem)
     {
@@ -32,6 +32,43 @@ public sealed class GameStateSystem
         SetState(GameState.Playing);
         waveSystem.Start();
     }
+
+    public void PauseGame()
+    {
+        if (CurrentState != GameState.Playing)
+        {
+            return;
+        }
+
+        Time.timeScale = 0f;
+        SetState(GameState.Paused);
+    }
+
+    public void ResumeGame()
+    {
+        if (CurrentState != GameState.Paused)
+        {
+            return;
+        }
+
+        Time.timeScale = 1f;
+        SetState(GameState.Playing);
+    }
+
+    public void TogglePause()
+    {
+        if (CurrentState == GameState.Playing)
+        {
+            PauseGame();
+            return;
+        }
+
+        if (CurrentState == GameState.Paused)
+        {
+            ResumeGame();
+        }
+    }
+
 
     private void WinGame()
     {

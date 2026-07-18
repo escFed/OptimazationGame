@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Enemy Data
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   prefab: {fileID: 1827742175142257561, guid: a6bcc8f2e5152c84181c3409c44db7fc, type: 3}
-  health: 30
+  health: 100
   speed: 3
   damage: 10
   attackRange: 1.2
+  attackCooldown: 1
   collisionRadius: 0.5
   introducedAtWave: 1

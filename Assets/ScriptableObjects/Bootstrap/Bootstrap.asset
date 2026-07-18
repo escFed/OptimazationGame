@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e18f6befcc4704a4aae81ae1e0d09221, type: 3}
+  m_Name: Bootstrap
+  m_EditorClassIdentifier: Assembly-CSharp::GameBootstrapData
+  player:
+    prefab: {fileID: 1210482424435220562, guid: 162a3a290a40cfe4c97fd873001550f2, type: 3}
+    terrain: {fileID: 4621881763796717040, guid: 56602887428e83f4fa3c640e61a6dd43, type: 3}
+    stats: {fileID: 11400000, guid: 774d23a6ac1449c468c5abc2e9f7dd7b, type: 2}
+    spawnHeightOffset: 1
+  weapon:
+    projectileData: {fileID: 11400000, guid: 8ea2796e6f8914c49b0edc5162c71970, type: 2}
+    initialPattern: {fileID: 11400000, guid: 53ef695413a6ce946b9e9fcf2f173f8d, type: 2}
+  waves:
+    waves:
+    - {fileID: 11400000, guid: 40065638a4961a547b2ce1253520ab43, type: 2}
+    - {fileID: 11400000, guid: f4bbe94c9843d3946a493730791b7eac, type: 2}
+    - {fileID: 11400000, guid: 0944df23c8a49394b9c5bb5012d8a0fa, type: 2}
+    - {fileID: 11400000, guid: 07875271630a8db46b563ce0aac687db, type: 2}
+  upgrades:
+    availableUpgrades:
+    - {fileID: 11400000, guid: e6ba3f054430ded4bb55af0bda20cdc3, type: 2}
+    - {fileID: 11400000, guid: 67ae765ab266aaa4784fcfebfddca580, type: 2}
+    - {fileID: 11400000, guid: 0c405674ac418bc40845df8bad1e9ec1, type: 2}
+    - {fileID: 11400000, guid: cf8b2d7cb585b6c4c828377b272ed699, type: 2}
+    - {fileID: 11400000, guid: 27d03e65f6e842b479377abfdd7f4be6, type: 2}
+    - {fileID: 11400000, guid: 879015898f5fb3f41ac18da758d93054, type: 2}
+    choiceCount: 3
+  cameraFollowData: {fileID: 11400000, guid: 0925e03d3e2bf6342bd1d0ba0c13a7d1, type: 2}

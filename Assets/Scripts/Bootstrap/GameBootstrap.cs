@@ -3,16 +3,8 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] private CustomUpdateManager updateManager;
-    [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private Terrain terrain;
-    [SerializeField] private PlayerBaseStats playerStats;
-    [SerializeField] private ProjectileData projectileData;
-    [SerializeField] private PatternData weaponPattern;
-    [SerializeField] private WaveData[] waves;
-    [SerializeField] private UpgradeData[] availableUpgrades;
-    [SerializeField] private int upgradeChoiceCount = 3;
-    [SerializeField] private CameraFollowData cameraFollowData;
     [SerializeField] private GameUI gameUI;
+    [SerializeField] private GameBootstrapData bootstrapData;
 
     private ServiceLocator services;
     private PlayerInput inputService;
@@ -32,23 +24,24 @@ public class GameBootstrap : MonoBehaviour
         services.Register(poolService);
         services.Register(combatSystem);
 
-        var playerObject = Instantiate(playerPrefab, GetTerrainCenter(), Quaternion.identity);
+        var playerObject = Instantiate(bootstrapData.Player.Prefab, GetPlayerSpawnPosition(), Quaternion.identity);
         var transformView = playerObject.GetComponent<TransformView>();
-        var player = new Player(1, transformView, playerStats);
+        var player = new Player(1, transformView, bootstrapData.Player.Stats);
         var mainCamera = Camera.main;
         var enemySystem = new EnemySystem(poolService);
         var movementSystem = new MovementSystem(player, inputService);
         var playerAimSystem = new PlayerAimSystem(player, inputService, mainCamera);
         var projectileSystem = new ProjectileSystem(poolService, enemySystem, combatSystem);
-        var weaponSystem = new WeaponSystem(player, projectileSystem, projectileData, weaponPattern);
-        var cameraFollowSystem = new CameraFollowSystem(mainCamera, player, cameraFollowData);
+        var weaponSystem = new WeaponSystem(player, projectileSystem, bootstrapData.Weapon.ProjectileData, bootstrapData.Weapon.InitialPattern);
+        var cameraFollowSystem = new CameraFollowSystem(mainCamera, player, bootstrapData.CameraFollowData);
         var aiSystem = new AISystem(player, enemySystem);
         var spawnSystem = new SpawnSystem(enemySystem, player);
-        var waveSystem = new WaveSystem(waves, spawnSystem, enemySystem);
+        var waveSystem = new WaveSystem(bootstrapData.Waves.Waves, spawnSystem, enemySystem);
         var gameStateSystem = new GameStateSystem(player, waveSystem);
         var enemyAttackSystem = new EnemyAttackSystem(player, enemySystem, combatSystem, gameStateSystem);
+        var pauseSystem = new PauseSystem(inputService, gameStateSystem);
         var upgradeContext = new UpgradeContext(player, weaponSystem);
-        var upgradeSystem = new UpgradeSystem(availableUpgrades, upgradeChoiceCount, upgradeContext, waveSystem);
+        var upgradeSystem = new UpgradeSystem(bootstrapData.Upgrades.AvailableUpgrades, bootstrapData.Upgrades.ChoiceCount, upgradeContext, waveSystem);
 
         gameUI.Initialize(gameStateSystem, upgradeSystem, player, waveSystem, enemySystem);
 
@@ -69,29 +62,31 @@ public class GameBootstrap : MonoBehaviour
         updateManager.Register(projectileSystem);
         updateManager.Register(enemySystem);
         updateManager.RegisterLateUpdate(cameraFollowSystem);
+        updateManager.Register(pauseSystem);
 
         gameStateSystem.ShowMainMenu();
+    }
+    private Vector3 GetPlayerSpawnPosition()
+    {
+        var terrain = bootstrapData.Player.Terrain;
+
+        if (terrain == null)
+        {
+            return Vector3.up * bootstrapData.Player.SpawnHeightOffset;
+        }
+
+        var terrainPosition = terrain.transform.position;
+        var terrainSize = terrain.terrainData.size;
+
+        var center = terrainPosition + new Vector3(terrainSize.x * 0.5f, 0f, terrainSize.z * 0.5f);
+
+        center.y = terrain.SampleHeight(center) + terrainPosition.y + bootstrapData.Player.SpawnHeightOffset;
+
+        return center;
     }
 
     private void OnDestroy()
     {
         inputService?.Dispose();
-    }
-
-    private Vector3 GetTerrainCenter()
-    {
-        if (terrain == null)
-        {
-            return Vector3.zero;
-        }
-
-        var terrainTransform = terrain.transform;
-        var terrainData = terrain.terrainData;
-        var size = terrainData.size;
-
-        var center = terrainTransform.position + new Vector3(size.x * 0.5f, 0f, size.z * 0.5f);
-        center.y = terrain.SampleHeight(center) + terrainTransform.position.y;
-
-        return center;
     }
 }

@@ -1,48 +1,25 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class GameUI : MonoBehaviour
 {
-    [Header("Screens")]
-    [SerializeField] private GameObject mainMenuPanel;
-    [SerializeField] private GameObject upgradePanel;
-    [SerializeField] private GameObject victoryPanel;
-    [SerializeField] private GameObject defeatPanel;
-    [SerializeField] private GameObject hudPanel;
-
-    [Header("Main Menu")]
-    [SerializeField] private Button playButton;
-
-    [Header("Upgrades")]
-    [SerializeField] private Button[] upgradeButtons;
-    [SerializeField] private TextMeshProUGUI[] upgradeTitleTexts;
-    [SerializeField] private TextMeshProUGUI[] upgradeDescriptionTexts;
-
-    [Header("HUD")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private TextMeshProUGUI waveText;
-    [SerializeField] private TextMeshProUGUI killsText;
-    [SerializeField] private TextMeshProUGUI upgradesText;
-    [SerializeField] private TextMeshProUGUI waveTimerText;
-
-    [Header("End Screens")]
-    [SerializeField] private Button victoryRestartButton;
-    [SerializeField] private Button defeatRestartButton;
-    [SerializeField] private Button victoryMainMenuButton;
-    [SerializeField] private Button defeatMainMenuButton;
+    [SerializeField] private GameUIScreen screens;
+    [SerializeField] private GameMainMenu mainMenu;
+    [SerializeField] private GameUpgrade upgrades;
+    [SerializeField] private GameHud hud;
+    [SerializeField] private GameEndScreen endScreens;
+    [SerializeField] private GamePause pause;
 
     private GameStateSystem gameStateSystem;
     private UpgradeSystem upgradeSystem;
     private Player player;
     private WaveSystem waveSystem;
     private EnemySystem enemySystem;
+    private List<string> appliedUpgradeNames = new();
 
-    private readonly List<string> appliedUpgradeNames = new();
     private float previousTimeScale = 1f;
+    private bool isUpgradeSelectionOpen;
 
     public void Initialize(GameStateSystem gameStateSystem, UpgradeSystem upgradeSystem, Player player, WaveSystem waveSystem, EnemySystem enemySystem)
     {
@@ -53,162 +30,149 @@ public class GameUI : MonoBehaviour
         this.enemySystem = enemySystem;
 
         gameStateSystem.StateChanged += ShowGameState;
-
         upgradeSystem.UpgradeSelectionStarted += ShowUpgrades;
-        upgradeSystem.UpgradeApplied += HideUpgrades;
-        upgradeSystem.UpgradeApplied += AddUpgrade;
-
+        upgradeSystem.UpgradeApplied += OnUpgradeApplied;
         player.Health.Changed += UpdateHealth;
-
         waveSystem.WaveStarted += UpdateWave;
         waveSystem.WaveTimeChanged += UpdateWaveTime;
-
         enemySystem.EnemyKilled += UpdateKills;
 
-        playButton.onClick.RemoveAllListeners();
-        playButton.onClick.AddListener(gameStateSystem.StartGame);
+        mainMenu.PlayButton.onClick.RemoveAllListeners();
+        mainMenu.PlayButton.onClick.AddListener(gameStateSystem.StartGame);
 
-        victoryRestartButton.onClick.RemoveAllListeners();
-        victoryRestartButton.onClick.AddListener(RestartScene);
+        mainMenu.QuitButton.onClick.RemoveAllListeners();
+        mainMenu.QuitButton.onClick.AddListener(QuitGame);
 
-        defeatRestartButton.onClick.RemoveAllListeners();
-        defeatRestartButton.onClick.AddListener(RestartScene);
+        endScreens.VictoryRestartButton.onClick.RemoveAllListeners();
+        endScreens.VictoryRestartButton.onClick.AddListener(RestartScene);
 
-        victoryMainMenuButton.onClick.RemoveAllListeners();
-        victoryMainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        endScreens.DefeatRestartButton.onClick.RemoveAllListeners();
+        endScreens.DefeatRestartButton.onClick.AddListener(RestartScene);
 
-        defeatMainMenuButton.onClick.RemoveAllListeners();
-        defeatMainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        endScreens.VictoryMainMenuButton.onClick.RemoveAllListeners();
+        endScreens.VictoryMainMenuButton.onClick.AddListener(RestartScene);
 
-        appliedUpgradeNames.Clear();
+        endScreens.DefeatMainMenuButton.onClick.RemoveAllListeners();
+        endScreens.DefeatMainMenuButton.onClick.AddListener(RestartScene);
 
-        UpdateHealth(player.Health.Current, player.Health.Max);
-        UpdateKills(enemySystem.TotalEnemiesKilled);
-        UpdateUpgradesText();
+        pause.ResumeButton.onClick.RemoveAllListeners();
+        pause.ResumeButton.onClick.AddListener(gameStateSystem.ResumeGame);
+
+        pause.MainMenuButton.onClick.RemoveAllListeners();
+        pause.MainMenuButton.onClick.AddListener(RestartScene);
 
         HideAll();
+        UpdateHealth(player.Health.Current, player.Health.Max);
+        UpdateKills(enemySystem.TotalEnemiesKilled);
+        UpdateAppliedUpgrades();
         ShowGameState(gameStateSystem.CurrentState);
     }
 
     private void ShowGameState(GameState state)
     {
-        mainMenuPanel.SetActive(state == GameState.MainMenu);
-        victoryPanel.SetActive(state == GameState.Victory);
-        defeatPanel.SetActive(state == GameState.Defeat);
-        hudPanel.SetActive(state == GameState.Playing);
+        screens.MainMenuPanel.SetActive(state == GameState.MainMenu);
+        screens.HudPanel.SetActive(state == GameState.Playing || state == GameState.Paused);
+        screens.PausePanel.SetActive(state == GameState.Paused);
+        screens.VictoryPanel.SetActive(state == GameState.Victory);
+        screens.DefeatPanel.SetActive(state == GameState.Defeat);
 
-        if (state == GameState.MainMenu || state == GameState.Victory || state == GameState.Defeat)
+        if (state != GameState.Playing)
         {
-            upgradePanel.SetActive(false);
+            screens.UpgradePanel.SetActive(false);
         }
     }
 
-    private void ShowUpgrades(IReadOnlyList<UpgradeData> upgrades)
+    private void ShowUpgrades(IReadOnlyList<UpgradeData> choices)
     {
+        if (isUpgradeSelectionOpen)
+        {
+            return;
+        }
+
+        isUpgradeSelectionOpen = true;
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        mainMenuPanel.SetActive(false);
-        victoryPanel.SetActive(false);
-        defeatPanel.SetActive(false);
-        hudPanel.SetActive(false);
-        upgradePanel.SetActive(true);
+        screens.UpgradePanel.SetActive(true);
+        screens.MainMenuPanel.SetActive(false);
+        screens.PausePanel.SetActive(false);
+        screens.VictoryPanel.SetActive(false);
+        screens.DefeatPanel.SetActive(false);
 
-        for (var i = 0; i < upgradeButtons.Length; i++)
+        for (var i = 0; i < upgrades.Buttons.Length; i++)
         {
-            var hasUpgrade = i < upgrades.Count;
+            var hasChoice = choices != null && i < choices.Count && choices[i] != null;
 
-            upgradeButtons[i].gameObject.SetActive(hasUpgrade);
+            upgrades.Buttons[i].gameObject.SetActive(hasChoice);
 
-            if (!hasUpgrade)
+            if (!hasChoice)
             {
                 continue;
             }
 
             var index = i;
-            var upgrade = upgrades[i];
+            var upgrade = choices[i];
 
-            upgradeTitleTexts[i].text = upgrade.Title;
-            upgradeDescriptionTexts[i].text = upgrade.Description;
+            upgrades.TitleTexts[i].text = upgrade.Title;
+            upgrades.DescriptionTexts[i].text = upgrade.Description;
 
-            upgradeButtons[i].onClick.RemoveAllListeners();
-            upgradeButtons[i].onClick.AddListener(() => upgradeSystem.SelectUpgrade(index));
+            upgrades.Buttons[i].onClick.RemoveAllListeners();
+            upgrades.Buttons[i].onClick.AddListener(() => upgradeSystem.SelectUpgrade(index));
         }
     }
 
-    private void HideUpgrades(UpgradeData upgrade)
+    private void OnUpgradeApplied(UpgradeData upgrade)
     {
-        upgradePanel.SetActive(false);
-        hudPanel.SetActive(true);
-        Time.timeScale = previousTimeScale;
+        screens.UpgradePanel.SetActive(false);
+
+        if (isUpgradeSelectionOpen)
+        {
+            isUpgradeSelectionOpen = false;
+            Time.timeScale = previousTimeScale;
+        }
+
+        if (upgrade != null)
+        {
+            appliedUpgradeNames.Add(upgrade.Title);
+            UpdateAppliedUpgrades();
+        }
     }
 
-    private void UpdateHealth(float currentHealth, float maxHealth)
+    private void UpdateHealth(float current, float max)
     {
-        if (healthSlider != null)
-        {
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = currentHealth;
-        }
-
-        if (healthText != null)
-        {
-            healthText.text = $"{Mathf.CeilToInt(currentHealth)} / {Mathf.CeilToInt(maxHealth)}";
-        }
+        hud.HealthSlider.maxValue = max;
+        hud.HealthSlider.value = current;
+        hud.HealthText.text = $"{Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
     }
 
     private void UpdateWave(WaveData wave)
     {
-        if (waveText != null)
-        {
-            waveText.text = $"Wave {wave.WaveNumber}";
-        }
+        hud.WaveText.text = $"Wave {wave.WaveNumber}";
     }
 
-    private void UpdateWaveTime(float remainingTime, float totalTime)
+    private void UpdateWaveTime(float timeRemaining, float duration)
     {
-        if (waveTimerText == null)
-        {
-            return;
-        }
-
-        var seconds = Mathf.CeilToInt(Mathf.Max(0f, remainingTime));
-        waveTimerText.text = $"Tiempo: {seconds}s";
+        hud.WaveTimerText.text = $"{Mathf.CeilToInt(timeRemaining)}s";
     }
 
-    private void UpdateKills(int totalKills)
+    private void UpdateKills(int kills)
     {
-        if (killsText != null)
-        {
-            killsText.text = $"Kills: {totalKills}";
-        }
+        hud.KillsText.text = $"Kills: {kills}";
     }
 
-    private void AddUpgrade(UpgradeData upgrade)
+    private void UpdateAppliedUpgrades()
     {
-        var upgradeName = string.IsNullOrWhiteSpace(upgrade.Title)? upgrade.name: upgrade.Title;
-
-        appliedUpgradeNames.Add(upgradeName);
-        UpdateUpgradesText();
-    }
-
-    private void UpdateUpgradesText()
-    {
-        if (upgradesText == null)
-        {
-            return;
-        }
-
-        upgradesText.text = appliedUpgradeNames.Count == 0? "Upgrades: Ninguna": $"Upgrades: {string.Join(", ", appliedUpgradeNames)}";
+        hud.UpgradesText.text = appliedUpgradeNames.Count == 0 ? "Upgrades: -" : "Upgrades: " + string.Join(", ", appliedUpgradeNames);
     }
 
     private void HideAll()
     {
-        mainMenuPanel.SetActive(false);
-        upgradePanel.SetActive(false);
-        victoryPanel.SetActive(false);
-        defeatPanel.SetActive(false);
-        hudPanel.SetActive(false);
+        screens.MainMenuPanel.SetActive(false);
+        screens.HudPanel.SetActive(false);
+        screens.UpgradePanel.SetActive(false);
+        screens.PausePanel.SetActive(false);
+        screens.VictoryPanel.SetActive(false);
+        screens.DefeatPanel.SetActive(false);
     }
 
     private void RestartScene()
@@ -217,10 +181,9 @@ public class GameUI : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    private void ReturnToMainMenu()
+    private void QuitGame()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Application.Quit();
     }
 
     private void OnDestroy()
@@ -233,8 +196,7 @@ public class GameUI : MonoBehaviour
         if (upgradeSystem != null)
         {
             upgradeSystem.UpgradeSelectionStarted -= ShowUpgrades;
-            upgradeSystem.UpgradeApplied -= HideUpgrades;
-            upgradeSystem.UpgradeApplied -= AddUpgrade;
+            upgradeSystem.UpgradeApplied -= OnUpgradeApplied;
         }
 
         if (player != null)

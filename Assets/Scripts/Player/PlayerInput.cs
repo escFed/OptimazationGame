@@ -15,6 +15,8 @@ public class PlayerInput
 
     public Vector2 PointerScreenPosition => Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
 
+    public bool PausePressed => inputActions.Player.Pause.WasPressedThisFrame();
+
     public void Dispose()
     {
         inputActions.Player.Disable();

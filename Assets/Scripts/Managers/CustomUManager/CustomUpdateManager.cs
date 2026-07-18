@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class CustomUpdateManager : MonoBehaviour
 {
-    private readonly List<IUpdateable> updateSystems = new();
-    private readonly List<IUpdateable> fixedUpdateSystems = new();
-    private readonly List<IUpdateable> lateUpdateSystems = new();
+    private List<IUpdateable> updateSystems = new();
+    private List<IUpdateable> fixedUpdateSystems = new();
+    private List<IUpdateable> lateUpdateSystems = new();
 
     public void Register(IUpdateable system)
     {
