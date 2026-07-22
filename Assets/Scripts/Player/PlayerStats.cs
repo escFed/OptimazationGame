@@ -2,13 +2,9 @@ using UnityEngine;
 
 public class PlayerStats
 {
-    public PlayerStats (PlayerBaseStats baseStats)
+    public PlayerStats(PlayerBaseStats baseStats)
     {
-        MoveSpeed = baseStats.MoveSpeed;
-        AttackSpeed = baseStats.AttackSpeed;
-        Damage = baseStats.Damage;
-        MaxHealth = baseStats.MaxHealth;
-        Armor = baseStats.Armor;
+        Reset(baseStats);
     }
 
     public float MoveSpeed { get; private set; }
@@ -17,10 +13,26 @@ public class PlayerStats
     public float MaxHealth { get; private set; }
     public float Armor { get; private set; }
 
+    public void Reset(PlayerBaseStats baseStats)
+    {
+        if (baseStats == null)
+        {
+            return;
+        }
+
+        MoveSpeed = baseStats.MoveSpeed;
+        AttackSpeed = baseStats.AttackSpeed;
+        Damage = baseStats.Damage;
+        MaxHealth = baseStats.MaxHealth;
+        Armor = baseStats.Armor;
+    }
+
     public void ApplyModifier(StatType stat, StatModifierMode mode, float value)
     {
         var currentValue = GetValue(stat);
-        var modifiedValue = mode == StatModifierMode.Percent? currentValue * (1f + value): currentValue + value;
+        var modifiedValue = mode == StatModifierMode.Percent
+            ? currentValue * (1f + value)
+            : currentValue + value;
 
         SetValue(stat, Mathf.Max(0f, modifiedValue));
     }
@@ -34,7 +46,7 @@ public class PlayerStats
             StatType.Damage => Damage,
             StatType.MaxHealth => MaxHealth,
             StatType.Armor => Armor,
-            _=> 0f
+            _ => 0f
         };
     }
 

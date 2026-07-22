@@ -2,16 +2,20 @@ using System;
 
 public class WaveSystem : IUpdateable
 {
-    private WaveData[] waves;
-    private SpawnSystem spawnSystem;
-    private EnemySystem enemySystem;
+    private readonly WaveData[] waves;
+    private readonly SpawnSystem spawnSystem;
+    private readonly EnemySystem enemySystem;
 
     private int currentWaveIndex;
     private float timeRemaining;
     private bool isRunning;
     private bool isWaitingForClear;
 
-    public WaveSystem(WaveData[] waves, SpawnSystem spawnSystem, EnemySystem enemySystem)
+    public WaveSystem(
+        WaveData[] waves,
+        SpawnSystem spawnSystem,
+        EnemySystem enemySystem
+    )
     {
         this.waves = waves;
         this.spawnSystem = spawnSystem;
@@ -35,6 +39,19 @@ public class WaveSystem : IUpdateable
         StartCurrentWave();
     }
 
+    public void ResetSession()
+    {
+        spawnSystem.ResetSession();
+
+        currentWaveIndex = 0;
+        timeRemaining = 0f;
+        isRunning = false;
+        isWaitingForClear = false;
+
+        CurrentWave = null;
+        IsGameCompleted = false;
+    }
+
     public void Tick(float deltaTime)
     {
         if (!isRunning || CurrentWave == null)
@@ -45,7 +62,10 @@ public class WaveSystem : IUpdateable
         if (timeRemaining > 0f)
         {
             timeRemaining = Math.Max(0f, timeRemaining - deltaTime);
-            WaveTimeChanged?.Invoke(timeRemaining, CurrentWave.Duration);
+            WaveTimeChanged?.Invoke(
+                timeRemaining,
+                CurrentWave.Duration
+            );
 
             if (timeRemaining <= 0f)
             {
@@ -58,6 +78,17 @@ public class WaveSystem : IUpdateable
         {
             CompleteCurrentWave();
         }
+    }
+
+    public void ContinueToNextWave()
+    {
+        if (isRunning || IsGameCompleted)
+        {
+            return;
+        }
+
+        currentWaveIndex++;
+        StartCurrentWave();
     }
 
     private void StartCurrentWave()
@@ -85,7 +116,10 @@ public class WaveSystem : IUpdateable
         spawnSystem.StartSpawning();
 
         WaveStarted?.Invoke(CurrentWave);
-        WaveTimeChanged?.Invoke(timeRemaining, CurrentWave.Duration);
+        WaveTimeChanged?.Invoke(
+            timeRemaining,
+            CurrentWave.Duration
+        );
     }
 
     private void CompleteCurrentWave()
@@ -105,22 +139,12 @@ public class WaveSystem : IUpdateable
         WaveCompleted?.Invoke(completedWave);
     }
 
-    public void ContinueToNextWave()
-    {
-        if (isRunning || IsGameCompleted)
-        {
-            return;
-        }
-
-        currentWaveIndex++;
-        StartCurrentWave();
-    }
-
     private void CompleteGame()
     {
         isRunning = false;
         IsGameCompleted = true;
         CurrentWave = null;
+
         spawnSystem.StopSpawning();
         GameCompleted?.Invoke();
     }

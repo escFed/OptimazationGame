@@ -1,18 +1,39 @@
 using UnityEngine;
 
-public class Enemy : IEntity, IDamageable, IPoolable
+public class Enemy :
+    IEntity,
+    IDamageable,
+    IPoolable
 {
     private GameObject instance;
     private float attackCooldownTimer;
+
+    public Enemy()
+    {
+        /*
+         * Se crea durante el precalentamiento del pool.
+         * Al asignar EnemyData se restablece al valor correcto.
+         */
+        Health = new Health(1f);
+    }
 
     public int Id { get; private set; }
     public EnemyData Data { get; private set; }
     public Health Health { get; private set; }
 
-    public bool IsDead => Health == null || Health.IsDead;
-    public bool IsActive => instance != null && instance.activeInHierarchy;
-    public bool CanAttack => attackCooldownTimer <= 0f;
-    public GameObject Instance => instance;
+    public bool IsDead =>
+        Health == null ||
+        Health.IsDead;
+
+    public bool IsActive =>
+        instance != null &&
+        instance.activeInHierarchy;
+
+    public bool CanAttack =>
+        attackCooldownTimer <= 0f;
+
+    public GameObject Instance =>
+        instance;
 
     public Vector3 Position
     {
@@ -20,39 +41,45 @@ public class Enemy : IEntity, IDamageable, IPoolable
         set => instance.transform.position = value;
     }
 
-    public void Initialize(int id, EnemyData data, GameObject instance, Vector3 position)
+    public void Initialize(
+        int id,
+        EnemyData data,
+        GameObject instance,
+        Vector3 position
+    )
     {
         Id = id;
         Data = data;
         this.instance = instance;
 
-        if (Health == null)
-        {
-            Health = new Health(data.Health);
-        }
-        else
-        {
-            Health.Reset(data.Health);
-        }
+        Health.Reset(data.Health);
 
         attackCooldownTimer = 0f;
         Position = position;
     }
 
-    public void TakeDamage(float amount, IEntity source)
+    public void TakeDamage(
+        float amount,
+        IEntity source
+    )
     {
         Health.TakeDamage(amount);
     }
 
     public void FaceDirection(Vector3 direction)
     {
-        if (direction.sqrMagnitude > 0f)
+        if (direction.sqrMagnitude <= 0f)
         {
-            instance.transform.forward = direction.normalized;
+            return;
         }
+
+        instance.transform.forward =
+            direction.normalized;
     }
 
-    public void TickAttackCooldown(float deltaTime)
+    public void TickAttackCooldown(
+        float deltaTime
+    )
     {
         if (attackCooldownTimer > 0f)
         {
@@ -62,7 +89,8 @@ public class Enemy : IEntity, IDamageable, IPoolable
 
     public void ResetAttackCooldown()
     {
-        attackCooldownTimer = Data.AttackCooldown;
+        attackCooldownTimer =
+            Data.AttackCooldown;
     }
 
     public void OnSpawn()

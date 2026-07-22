@@ -26,4 +26,9 @@ public class ActivePattern
         attackSpeed = Mathf.Max(0.01f, attackSpeed);
         CooldownTimer = Pattern.BaseAttackInterval / attackSpeed;
     }
+
+    public void Reset()
+    {
+        CooldownTimer = 0f;
+    }
 }

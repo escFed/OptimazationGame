@@ -4,26 +4,41 @@ using UnityEngine;
 
 public class UpgradeSystem
 {
-    private List<UpgradeData> availableUpgrades = new();
-    private List<UpgradeData> selectedUpgrades = new();
+    private readonly List<UpgradeData> initialUpgrades = new();
+    private readonly List<UpgradeData> availableUpgrades = new();
+    private readonly List<UpgradeData> selectedUpgrades = new();
+    private readonly List<UpgradeData> currentChoices = new();
+    private readonly List<UpgradeData> choicePool = new();
 
-    private int choiceCount;
-    private UpgradeContext context;
-    private WaveSystem waveSystem;
+    private readonly int choiceCount;
+    private readonly UpgradeContext context;
+    private readonly WaveSystem waveSystem;
 
-    private List<UpgradeData> currentChoices = new();
     private bool isSelectionOpen;
 
-    public UpgradeSystem(UpgradeData[] availableUpgrades, int choiceCount, UpgradeContext context, WaveSystem waveSystem)
+    public UpgradeSystem(
+        UpgradeData[] availableUpgrades,
+        int choiceCount,
+        UpgradeContext context,
+        WaveSystem waveSystem
+    )
     {
         if (availableUpgrades != null)
         {
             for (var i = 0; i < availableUpgrades.Length; i++)
             {
-                if (availableUpgrades[i] != null && !this.availableUpgrades.Contains(availableUpgrades[i]))
+                var upgrade = availableUpgrades[i];
+
+                if (
+                    upgrade == null ||
+                    initialUpgrades.Contains(upgrade)
+                )
                 {
-                    this.availableUpgrades.Add(availableUpgrades[i]);
+                    continue;
                 }
+
+                initialUpgrades.Add(upgrade);
+                this.availableUpgrades.Add(upgrade);
             }
         }
 
@@ -43,7 +58,11 @@ public class UpgradeSystem
 
     public void SelectUpgrade(int choiceIndex)
     {
-        if (!isSelectionOpen || choiceIndex < 0 || choiceIndex >= currentChoices.Count)
+        if (
+            !isSelectionOpen ||
+            choiceIndex < 0 ||
+            choiceIndex >= currentChoices.Count
+        )
         {
             return;
         }
@@ -63,6 +82,18 @@ public class UpgradeSystem
 
         UpgradeApplied?.Invoke(upgrade);
         waveSystem.ContinueToNextWave();
+    }
+
+    public void ResetSession()
+    {
+        isSelectionOpen = false;
+
+        selectedUpgrades.Clear();
+        currentChoices.Clear();
+        choicePool.Clear();
+
+        availableUpgrades.Clear();
+        availableUpgrades.AddRange(initialUpgrades);
     }
 
     private void BeginSelection(WaveData completedWave)
@@ -87,22 +118,28 @@ public class UpgradeSystem
     private void BuildChoices()
     {
         currentChoices.Clear();
+        choicePool.Clear();
 
         if (availableUpgrades.Count == 0)
         {
             return;
         }
 
-        var tempPool = new List<UpgradeData>(availableUpgrades);
-        var amount = Mathf.Min(choiceCount, tempPool.Count);
+        choicePool.AddRange(availableUpgrades);
+
+        var amount = Mathf.Min(choiceCount, choicePool.Count);
 
         for (var i = 0; i < amount; i++)
         {
-            var randomIndex = UnityEngine.Random.Range(0, tempPool.Count);
-            var upgrade = tempPool[randomIndex];
+            var randomIndex = UnityEngine.Random.Range(
+                0,
+                choicePool.Count
+            );
+
+            var upgrade = choicePool[randomIndex];
 
             currentChoices.Add(upgrade);
-            tempPool.RemoveAt(randomIndex);
+            choicePool.RemoveAt(randomIndex);
         }
     }
 }

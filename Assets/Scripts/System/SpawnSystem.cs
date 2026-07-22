@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class SpawnSystem : IUpdateable
 {
-    private EnemySystem enemySystem;
-    private Player player;
-    private EnemyData enemyData;
+    private readonly EnemySystem enemySystem;
+    private readonly Player player;
+
     private WaveData currentWave;
     private float timer;
     private bool isSpawning;
@@ -29,6 +29,13 @@ public class SpawnSystem : IUpdateable
     public void StopSpawning()
     {
         isSpawning = false;
+    }
+
+    public void ResetSession()
+    {
+        isSpawning = false;
+        currentWave = null;
+        timer = 0f;
     }
 
     public void Tick(float deltaTime)
@@ -86,6 +93,11 @@ public class SpawnSystem : IUpdateable
         point.Normalize();
 
         var playerPosition = player.Position;
-        return new Vector3(playerPosition.x + point.x * currentWave.SpawnRadius, playerPosition.y, playerPosition.z + point.y * currentWave.SpawnRadius);
+
+        return new Vector3(
+            playerPosition.x + point.x * currentWave.SpawnRadius,
+            playerPosition.y,
+            playerPosition.z + point.y * currentWave.SpawnRadius
+        );
     }
 }

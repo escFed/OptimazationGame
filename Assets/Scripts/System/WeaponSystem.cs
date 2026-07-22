@@ -3,20 +3,20 @@ using UnityEngine;
 
 public class WeaponSystem : IUpdateable
 {
-    private Player player;
-    private ProjectileSystem projectileSystem;
-    private ProjectileData projectileData;
+    private readonly Player player;
+    private readonly ProjectileSystem projectileSystem;
+    private readonly ProjectileData projectileData;
+    private readonly PatternData initialPattern;
 
-    private List<ActivePattern> activePatterns = new();
-    private List<Vector3> directions = new();
-
-    private float cooldownTimer;
+    private readonly List<ActivePattern> activePatterns = new();
+    private readonly List<Vector3> directions = new();
 
     public WeaponSystem(Player player, ProjectileSystem projectileSystem, ProjectileData projectileData, PatternData initialPattern)
     {
         this.player = player;
         this.projectileSystem = projectileSystem;
         this.projectileData = projectileData;
+        this.initialPattern = initialPattern;
 
         AddPattern(initialPattern);
     }
@@ -56,6 +56,26 @@ public class WeaponSystem : IUpdateable
         activePatterns.Add(new ActivePattern(newPattern));
     }
 
+    public void ResetSession()
+    {
+        if (activePatterns.Count > 1)
+        {
+            activePatterns.RemoveRange(1, activePatterns.Count - 1);
+        }
+
+        if (activePatterns.Count == 0 && initialPattern != null)
+        {
+            AddPattern(initialPattern);
+        }
+
+        if (activePatterns.Count > 0)
+        {
+            activePatterns[0].Reset();
+        }
+
+        directions.Clear();
+    }
+
     private bool HasPattern(PatternData pattern)
     {
         for (var i = 0; i < activePatterns.Count; i++)
@@ -87,8 +107,13 @@ public class WeaponSystem : IUpdateable
             var spawnPosition = player.Position + normalizedDirection * projectileData.SpawnOffset;
             var damage = player.Stats.Damage + projectileData.Damage;
 
-            projectileSystem.Spawn(projectileData, spawnPosition, normalizedDirection, player.Id, damage);
-
+            projectileSystem.Spawn(
+                projectileData,
+                spawnPosition,
+                normalizedDirection,
+                player.Id,
+                damage
+            );
         }
     }
 }

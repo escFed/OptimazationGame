@@ -4,38 +4,84 @@ using UnityEngine;
 
 public class EnemySystem : IUpdateable
 {
-    private PoolService poolService;
-    private ObjectPool<Enemy> enemyPool;
-    private List<Enemy> activeEnemies = new();
+    private readonly PoolService poolService;
+    private readonly ObjectPool<Enemy> enemyPool;
+
+    private readonly List<Enemy>
+        activeEnemies = new();
+
     private int nextEnemyId = 1;
     private int totalEnemiesKilled;
 
-    public EnemySystem(PoolService poolService)
+    public EnemySystem(
+        PoolService poolService
+    )
     {
         this.poolService = poolService;
-        enemyPool = new ObjectPool<Enemy>(() => new Enemy());
+
+        enemyPool = new ObjectPool<Enemy>(
+            () => new Enemy()
+        );
     }
 
-    public int CountActive => activeEnemies.Count;
-    public int TotalEnemiesKilled => totalEnemiesKilled;
-    public IReadOnlyList<Enemy> ActiveEnemies => activeEnemies;
+    public int CountActive =>
+        activeEnemies.Count;
+
+    public int TotalEnemiesKilled =>
+        totalEnemiesKilled;
+
+    public IReadOnlyList<Enemy>
+        ActiveEnemies => activeEnemies;
+
     public event Action<int> EnemyKilled;
 
-    public Enemy Spawn(EnemyData data, Vector3 position)
+    public void Prewarm(int amount)
     {
-        var instance = poolService.Get(data.Prefab);
-        var enemy = enemyPool.Get();
+        if (amount <= 0)
+        {
+            return;
+        }
 
-        enemy.Initialize(nextEnemyId, data, instance, position);
+        enemyPool.Prewarm(amount);
+
+        if (activeEnemies.Capacity < amount)
+        {
+            activeEnemies.Capacity = amount;
+        }
+    }
+
+    public Enemy Spawn(
+        EnemyData data,
+        Vector3 position
+    )
+    {
+        var instance =
+            poolService.Get(data.Prefab);
+
+        var enemy =
+            enemyPool.Get();
+
+        enemy.Initialize(
+            nextEnemyId,
+            data,
+            instance,
+            position
+        );
+
         nextEnemyId++;
 
         activeEnemies.Add(enemy);
+
         return enemy;
     }
 
     public void Tick(float deltaTime)
     {
-        for (var i = activeEnemies.Count - 1; i >= 0; i--)
+        for (
+            var i = activeEnemies.Count - 1;
+            i >= 0;
+            i--
+        )
         {
             if (activeEnemies[i].IsDead)
             {
@@ -44,15 +90,51 @@ public class EnemySystem : IUpdateable
         }
     }
 
+    public void ResetSession()
+    {
+        for (
+            var i = activeEnemies.Count - 1;
+            i >= 0;
+            i--
+        )
+        {
+            var enemy = activeEnemies[i];
+
+            poolService.Return(
+                enemy.Data.Prefab,
+                enemy.Instance
+            );
+
+            enemyPool.Return(enemy);
+        }
+
+        activeEnemies.Clear();
+
+        nextEnemyId = 1;
+        totalEnemiesKilled = 0;
+
+        EnemyKilled?.Invoke(
+            totalEnemiesKilled
+        );
+    }
+
     private void Despawn(int index)
     {
-        var enemy = activeEnemies[index];
+        var enemy =
+            activeEnemies[index];
 
-        poolService.Return(enemy.Data.Prefab, enemy.Instance);
+        poolService.Return(
+            enemy.Data.Prefab,
+            enemy.Instance
+        );
+
         enemyPool.Return(enemy);
         activeEnemies.RemoveAt(index);
 
         totalEnemiesKilled++;
-        EnemyKilled?.Invoke(totalEnemiesKilled);
+
+        EnemyKilled?.Invoke(
+            totalEnemiesKilled
+        );
     }
 }

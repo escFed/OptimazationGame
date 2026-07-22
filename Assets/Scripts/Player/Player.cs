@@ -1,18 +1,20 @@
-using UnityEngine;
 using System;
+using UnityEngine;
 
 public class Player : IEntity, IDamageable
 {
-    private TransformView view;
+    private readonly TransformView view;
+    private readonly PlayerBaseStats baseStats;
 
     public Player(int id, TransformView view, PlayerBaseStats baseStats)
     {
         Id = id;
         this.view = view;
+        this.baseStats = baseStats;
 
         Stats = new PlayerStats(baseStats);
         Health = new Health(Stats.MaxHealth);
-        Health.Depleted += () => Died?.Invoke();
+        Health.Depleted += HandleDeath;
     }
 
     public event Action Died;
@@ -40,6 +42,18 @@ public class Player : IEntity, IDamageable
 
         var finalDamage = Mathf.Max(1f, amount - Stats.Armor);
         Health.TakeDamage(finalDamage);
+    }
+
+    public void ResetSession(Vector3 spawnPosition)
+    {
+        Stats.Reset(baseStats);
+        Health.Reset(Stats.MaxHealth);
+
+        if (view != null)
+        {
+            view.gameObject.SetActive(true);
+            Position = spawnPosition;
+        }
     }
 
     private void HandleDeath()
