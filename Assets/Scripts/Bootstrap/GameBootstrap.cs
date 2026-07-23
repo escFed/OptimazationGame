@@ -14,12 +14,16 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField, Min(0)]
     private int enemyPrewarmCountPerType = 20;
 
+    [SerializeField, Min(0)]
+    private int effectPrewarmCount = 32;
+
     private ServiceLocator services;
     private PlayerInput inputService;
 
     private Player player;
     private EnemySystem enemySystem;
     private ProjectileSystem projectileSystem;
+    private EffectSystem effectSystem;
     private WeaponSystem weaponSystem;
     private WaveSystem waveSystem;
     private UpgradeSystem upgradeSystem;
@@ -45,11 +49,15 @@ public class GameBootstrap : MonoBehaviour
         var combatSystem =
             new CombatSystem();
 
+        effectSystem =
+            new EffectSystem(poolService);
+
         services.Register(timeService);
         services.Register(updateManager);
         services.Register(inputService);
         services.Register(poolService);
         services.Register(combatSystem);
+        services.Register(effectSystem);
 
         var playerObject = Instantiate(
             bootstrapData.Player.Prefab,
@@ -88,7 +96,8 @@ public class GameBootstrap : MonoBehaviour
             new ProjectileSystem(
                 poolService,
                 enemySystem,
-                combatSystem
+                combatSystem,
+                effectSystem
             );
 
         weaponSystem =
@@ -209,6 +218,10 @@ public class GameBootstrap : MonoBehaviour
         );
 
         updateManager.Register(
+            effectSystem
+        );
+
+        updateManager.Register(
             enemySystem
         );
 
@@ -221,7 +234,7 @@ public class GameBootstrap : MonoBehaviour
         );
 
         /*
-         * Toda la creación inicial se realiza antes de que el
+         * Toda la creaci?n inicial se realiza antes de que el
          * usuario pueda comenzar la partida.
          */
         PrewarmPools(poolService);
@@ -234,6 +247,10 @@ public class GameBootstrap : MonoBehaviour
     )
     {
         PrewarmProjectilePool(
+            poolService
+        );
+
+        PrewarmEffectPools(
             poolService
         );
 
@@ -266,6 +283,47 @@ public class GameBootstrap : MonoBehaviour
         projectileSystem.Prewarm(
             projectilePrewarmCount
         );
+    }
+
+    private void PrewarmEffectPools(
+        PoolService poolService
+    )
+    {
+        var projectileData =
+            bootstrapData.Weapon.ProjectileData;
+
+        if (
+            projectileData == null ||
+            effectPrewarmCount <= 0
+        )
+        {
+            return;
+        }
+
+        var spawnEffect =
+            projectileData.SpawnEffectPrefab;
+
+        var impactEffect =
+            projectileData.ImpactEffectPrefab;
+
+        if (spawnEffect != null)
+        {
+            poolService.Prewarm(
+                spawnEffect,
+                effectPrewarmCount
+            );
+        }
+
+        if (
+            impactEffect != null &&
+            impactEffect != spawnEffect
+        )
+        {
+            poolService.Prewarm(
+                impactEffect,
+                effectPrewarmCount
+            );
+        }
     }
 
     private void PrewarmEnemyPools(
@@ -372,6 +430,7 @@ public class GameBootstrap : MonoBehaviour
         projectileSystem.ResetSession();
         enemySystem.ResetSession();
         upgradeSystem.ResetSession();
+        effectSystem.ResetSession();
         weaponSystem.ResetSession();
         player.ResetSession(
             GetPlayerSpawnPosition()

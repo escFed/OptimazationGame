@@ -6,6 +6,7 @@ public class ProjectileSystem : IUpdateable
     private readonly PoolService poolService;
     private readonly EnemySystem enemySystem;
     private readonly CombatSystem combatSystem;
+    private readonly EffectSystem effectSystem;
 
     private readonly ObjectPool<Projectile>
         projectilePool;
@@ -18,17 +19,16 @@ public class ProjectileSystem : IUpdateable
     public ProjectileSystem(
         PoolService poolService,
         EnemySystem enemySystem,
-        CombatSystem combatSystem
+        CombatSystem combatSystem,
+        EffectSystem effectSystem
     )
     {
         this.poolService = poolService;
         this.enemySystem = enemySystem;
         this.combatSystem = combatSystem;
+        this.effectSystem = effectSystem;
 
-        projectilePool =
-            new ObjectPool<Projectile>(
-                () => new Projectile()
-            );
+        projectilePool =new ObjectPool<Projectile>(() => new Projectile());
     }
 
     public void Prewarm(int amount)
@@ -67,6 +67,12 @@ public class ProjectileSystem : IUpdateable
             position,
             direction,
             ownerId
+        );
+
+        effectSystem.Play(
+            data.SpawnEffectPrefab,
+            position,
+            GetEffectRotation(direction)
         );
 
         nextId++;
@@ -134,49 +140,33 @@ public class ProjectileSystem : IUpdateable
         nextId = 1;
     }
 
-    private bool HitEnemy(
-        Projectile projectile
-    )
+    private bool HitEnemy(Projectile projectile)
     {
-        var enemies =
-            enemySystem.ActiveEnemies;
+        var enemies = enemySystem.ActiveEnemies;
 
         for (var i = 0; i < enemies.Count; i++)
         {
             var enemy = enemies[i];
 
-            if (
-                !enemy.IsActive ||
-                enemy.IsDead
-            )
+            if (!enemy.IsActive || enemy.IsDead)
             {
                 continue;
             }
 
-            var delta =
-                enemy.Position -
-                projectile.Position;
+            var delta = enemy.Position - projectile.Position;
 
             delta.y = 0f;
 
-            var collisionDistance =
-                enemy.Data.CollisionRadius +
-                projectile.Data.CollisionRadius;
+            var collisionDistance = enemy.Data.CollisionRadius + projectile.Data.CollisionRadius;
 
-            if (
-                delta.sqrMagnitude >
-                collisionDistance *
-                collisionDistance
-            )
+            if (delta.sqrMagnitude > collisionDistance * collisionDistance)
             {
                 continue;
             }
 
-            combatSystem.ApplyDamage(
-                projectile,
-                enemy,
-                projectile.Data.Damage
-            );
+            combatSystem.ApplyDamage(projectile, enemy, projectile.Data.Damage);
+
+            PlayImpactEffect(projectile, enemy);
 
             return true;
         }
@@ -184,19 +174,38 @@ public class ProjectileSystem : IUpdateable
         return false;
     }
 
+    private void PlayImpactEffect(Projectile projectile, Enemy enemy)
+    {
+        var hitNormal = projectile.Position - enemy.Position;
+
+        hitNormal.y = 0f;
+
+        if (hitNormal.sqrMagnitude <= Mathf.Epsilon)
+        {
+            hitNormal = -projectile.Direction;
+        }
+
+        hitNormal.Normalize();
+
+        var hitPosition = enemy.Position + hitNormal * enemy.Data.CollisionRadius;
+
+        hitPosition.y = projectile.Position.y;
+
+        effectSystem.Play(projectile.Data.ImpactEffectPrefab, hitPosition, GetEffectRotation(hitNormal));
+    }
+
+    private static Quaternion GetEffectRotation(Vector3 direction)
+    {
+        return direction.sqrMagnitude > Mathf.Epsilon ? Quaternion.LookRotation(direction) : Quaternion.identity;
+    }
+
     private void Despawn(int index)
     {
-        var projectile =
-            activeProjectiles[index];
+        var projectile = activeProjectiles[index];
 
-        poolService.Return(
-            projectile.Data.Prefab,
-            projectile.Instance
-        );
+        poolService.Return(projectile.Data.Prefab, projectile.Instance);
 
-        projectilePool.Return(
-            projectile
-        );
+        projectilePool.Return(projectile);
 
         activeProjectiles.RemoveAt(index);
     }

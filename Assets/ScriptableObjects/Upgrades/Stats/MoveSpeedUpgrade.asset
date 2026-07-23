@@ -16,5 +16,5 @@ MonoBehaviour:
   description: velocidad de movimiento
   canRepeat: 1
   stat: 0
-  mode: 1
-  value: 10
+  mode: 0
+  value: 0.5
