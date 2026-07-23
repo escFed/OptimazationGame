@@ -15,7 +15,7 @@ MonoBehaviour:
   waveNumber: 4
   duration: 20
   enemyTypes:
-  - {fileID: 11400000, guid: eb26a235fa187414cb2f2a5319de2635, type: 2}
+  - {fileID: 11400000, guid: d3c38e29a66341f0b9924b1f5ef25f33, type: 2}
   spawnInterval: 0.5
   spawnRadius: 12
   maxEnemies: 50

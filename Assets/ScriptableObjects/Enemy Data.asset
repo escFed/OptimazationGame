@@ -20,3 +20,5 @@ MonoBehaviour:
   attackCooldown: 1
   collisionRadius: 0.5
   introducedAtWave: 1
+  idleAnimationState: Idle
+  moveAnimationState: Run

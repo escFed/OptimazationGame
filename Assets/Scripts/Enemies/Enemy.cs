@@ -6,7 +6,9 @@ public class Enemy :
     IPoolable
 {
     private GameObject instance;
+    private Animator[] animators;
     private float attackCooldownTimer;
+    private int currentAnimationStateHash;
 
     public Enemy()
     {
@@ -51,11 +53,15 @@ public class Enemy :
         Id = id;
         Data = data;
         this.instance = instance;
+        animators = instance.GetComponentsInChildren<Animator>(true);
 
         Health.Reset(data.Health);
 
         attackCooldownTimer = 0f;
+        currentAnimationStateHash = 0;
         Position = position;
+
+        SetMoving(false);
     }
 
     public void TakeDamage(
@@ -75,6 +81,60 @@ public class Enemy :
 
         instance.transform.forward =
             direction.normalized;
+    }
+
+
+    public void SetMoving(bool isMoving)
+    {
+        if (
+            Data == null ||
+            animators == null ||
+            animators.Length == 0
+        )
+        {
+            return;
+        }
+
+        var stateName = isMoving
+            ? Data.MoveAnimationState
+            : Data.IdleAnimationState;
+
+        if (string.IsNullOrWhiteSpace(stateName))
+        {
+            return;
+        }
+
+        var stateHash =
+            Animator.StringToHash(stateName);
+
+        if (stateHash == currentAnimationStateHash)
+        {
+            return;
+        }
+
+        var stateWasPlayed = false;
+
+        for (var i = 0; i < animators.Length; i++)
+        {
+            var animator = animators[i];
+
+            if (
+                animator == null ||
+                !animator.isActiveAndEnabled ||
+                !animator.HasState(0, stateHash)
+            )
+            {
+                continue;
+            }
+
+            animator.CrossFade(stateHash, 0.1f, 0);
+            stateWasPlayed = true;
+        }
+
+        if (stateWasPlayed)
+        {
+            currentAnimationStateHash = stateHash;
+        }
     }
 
     public void TickAttackCooldown(
@@ -103,5 +163,7 @@ public class Enemy :
         Data = null;
         instance = null;
         attackCooldownTimer = 0f;
+        animators = null;
+        currentAnimationStateHash = 0;
     }
 }

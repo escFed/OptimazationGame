@@ -31,11 +31,13 @@ public class AISystem : IUpdateable
 
             if (toPlayer.sqrMagnitude <= stopDistance * stopDistance)
             {
+                enemy.SetMoving(false);
                 enemy.FaceDirection(toPlayer);
                 continue;
             }
 
             var direction = toPlayer.normalized;
+            enemy.SetMoving(true);
 
             enemy.Position += direction * enemy.Data.Speed * deltaTime;
             enemy.FaceDirection(direction);

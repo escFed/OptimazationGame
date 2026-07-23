@@ -5,7 +5,10 @@ public class WaveData : ScriptableObject
 {
     [SerializeField] private int waveNumber = 1;
     [SerializeField] private float duration = 45f;
-    [SerializeField] private EnemyData[] enemyTypes;
+    [SerializeField, Tooltip(
+        "Enemy types introduced in this wave. Previous types remain available automatically."
+    )]
+    private EnemyData[] enemyTypes;
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float spawnRadius = 12f;
     [SerializeField] private int maxEnemies = 20;

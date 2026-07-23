@@ -18,5 +18,5 @@ MonoBehaviour:
   lifetime: 2
   spawnOffset: 0.8
   collisionRadius: 0.25
-  spawnEffectPrefab: {fileID: 2504214343621411470, guid: 13a33558e362842479c95f7270ed4911, type: 3}
-  impactEffectPrefab: {fileID: 8194992990867289339, guid: 2ed82d9444a47eb4984f47f3580f3f46, type: 3}
+  spawnEffectPrefab: {fileID: 8194992990867289339, guid: 2ed82d9444a47eb4984f47f3580f3f46, type: 3}
+  impactEffectPrefab: {fileID: 2504214343621411470, guid: 13a33558e362842479c95f7270ed4911, type: 3}

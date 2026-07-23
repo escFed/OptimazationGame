@@ -11,6 +11,8 @@ public class EnemyData : ScriptableObject
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float collisionRadius = 0.5f;
     [SerializeField] private int introducedAtWave = 1;
+    [SerializeField] private string idleAnimationState = "Idle";
+    [SerializeField] private string moveAnimationState = "Run";
 
     public GameObject Prefab => prefab;
     public float Health => health;
@@ -20,4 +22,6 @@ public class EnemyData : ScriptableObject
     public float AttackCooldown => attackCooldown;
     public float CollisionRadius => collisionRadius;
     public int IntroducedAtWave => introducedAtWave;
+    public string IdleAnimationState => idleAnimationState;
+    public string MoveAnimationState => moveAnimationState;
 }

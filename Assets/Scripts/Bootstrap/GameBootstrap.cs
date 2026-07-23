@@ -234,7 +234,7 @@ public class GameBootstrap : MonoBehaviour
         );
 
         /*
-         * Toda la creaci?n inicial se realiza antes de que el
+         * Toda la creación inicial se realiza antes de que el
          * usuario pueda comenzar la partida.
          */
         PrewarmPools(poolService);

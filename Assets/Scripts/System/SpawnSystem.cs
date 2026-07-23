@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnSystem : IUpdateable
@@ -6,6 +7,7 @@ public class SpawnSystem : IUpdateable
     private readonly Player player;
 
     private WaveData currentWave;
+    private IReadOnlyList<EnemyData> availableEnemyTypes;
     private float timer;
     private bool isSpawning;
 
@@ -15,10 +17,14 @@ public class SpawnSystem : IUpdateable
         this.player = player;
     }
 
-    public void Configure(WaveData wave)
+    public void Configure(
+        WaveData wave,
+        IReadOnlyList<EnemyData> enemyTypes
+    )
     {
         currentWave = wave;
         timer = 0f;
+        availableEnemyTypes = enemyTypes;
     }
 
     public void StartSpawning()
@@ -36,6 +42,7 @@ public class SpawnSystem : IUpdateable
         isSpawning = false;
         currentWave = null;
         timer = 0f;
+        availableEnemyTypes = null;
     }
 
     public void Tick(float deltaTime)
@@ -71,14 +78,14 @@ public class SpawnSystem : IUpdateable
 
     private EnemyData GetEnemyData()
     {
-        var enemyPool = currentWave.EnemyTypes;
+        var enemyPool = availableEnemyTypes;
 
-        if (enemyPool == null || enemyPool.Length == 0)
+        if (enemyPool == null || enemyPool.Count == 0)
         {
             return null;
         }
 
-        return enemyPool[Random.Range(0, enemyPool.Length)];
+        return enemyPool[Random.Range(0, enemyPool.Count)];
     }
 
     private Vector3 GetSpawnPosition()

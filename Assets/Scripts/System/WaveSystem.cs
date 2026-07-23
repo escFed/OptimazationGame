@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 public class WaveSystem : IUpdateable
 {
     private readonly WaveData[] waves;
     private readonly SpawnSystem spawnSystem;
     private readonly EnemySystem enemySystem;
+    private readonly List<EnemyData> availableEnemyTypes = new();
 
     private int currentWaveIndex;
     private float timeRemaining;
@@ -34,6 +36,7 @@ public class WaveSystem : IUpdateable
 
     public void Start()
     {
+        availableEnemyTypes.Clear();
         currentWaveIndex = 0;
         IsGameCompleted = false;
         StartCurrentWave();
@@ -48,6 +51,7 @@ public class WaveSystem : IUpdateable
         isRunning = false;
         isWaitingForClear = false;
 
+        availableEnemyTypes.Clear();
         CurrentWave = null;
         IsGameCompleted = false;
     }
@@ -112,7 +116,11 @@ public class WaveSystem : IUpdateable
         isRunning = true;
         isWaitingForClear = false;
 
-        spawnSystem.Configure(CurrentWave);
+        AddEnemyTypes(CurrentWave);
+        spawnSystem.Configure(
+            CurrentWave,
+            availableEnemyTypes
+        );
         spawnSystem.StartSpawning();
 
         WaveStarted?.Invoke(CurrentWave);
@@ -120,6 +128,29 @@ public class WaveSystem : IUpdateable
             timeRemaining,
             CurrentWave.Duration
         );
+    }
+
+    private void AddEnemyTypes(WaveData wave)
+    {
+        var enemyTypes = wave.EnemyTypes;
+
+        if (enemyTypes == null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < enemyTypes.Length; i++)
+        {
+            var enemyType = enemyTypes[i];
+
+            if (
+                enemyType != null &&
+                !availableEnemyTypes.Contains(enemyType)
+            )
+            {
+                availableEnemyTypes.Add(enemyType);
+            }
+        }
     }
 
     private void CompleteCurrentWave()

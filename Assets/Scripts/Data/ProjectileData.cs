@@ -11,9 +11,11 @@ public class ProjectileData : ScriptableObject
     [SerializeField] private float collisionRadius = 0.25f;
 
     [Header("Effects")]
-    [SerializeField] private GameObject spawnEffectPrefab;
+    [SerializeField]
+    private GameObject spawnEffectPrefab;
 
-    [SerializeField] private GameObject impactEffectPrefab;
+    [SerializeField]
+    private GameObject impactEffectPrefab;
 
     public GameObject Prefab => prefab;
     public float Speed => speed;
@@ -21,6 +23,8 @@ public class ProjectileData : ScriptableObject
     public float Lifetime => lifetime;
     public float SpawnOffset => spawnOffset;
     public float CollisionRadius => collisionRadius;
-    public GameObject SpawnEffectPrefab => spawnEffectPrefab;
-    public GameObject ImpactEffectPrefab => impactEffectPrefab;
+    public GameObject SpawnEffectPrefab =>
+        spawnEffectPrefab;
+    public GameObject ImpactEffectPrefab =>
+        impactEffectPrefab;
 }
